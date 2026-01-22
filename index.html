@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capítulo 3: Equipamiento Cultural | Plaza del Arte</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        'museum-purple': '#7C3AED',
+                        'theater-gold': '#D97706',
+                        'agora-green': '#059669',
+                        'gallery-blue': '#2563EB',
+                        'arch-dark': '#18181B',
+                        'arch-gray': '#F4F4F5'
+                    },
+                    boxShadow: {
+                        'soft': '0 20px 40px -15px rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* --- MOTOR 3D CSS --- */
+        .scene-3d {
+            perspective: 1200px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .iso-container {
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(60deg) rotateZ(-45deg);
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            width: 200px;
+            height: 200px;
+        }
+        
+        /* Animación de entrada */
+        .iso-container.enter {
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { transform: rotateX(60deg) rotateZ(-45deg) scale(0) translateZ(-100px); opacity: 0; }
+            100% { transform: rotateX(60deg) rotateZ(-45deg) scale(1) translateZ(0); opacity: 1; }
+        }
+
+        /* Caras Genéricas */
+        .face { position: absolute; transform-style: preserve-3d; }
+        
+        /* --- MODELO 1: MUSEO (Cubo Cristal) --- */
+        .m-core {
+            position: absolute; width: 60px; height: 60px; background: #64748B;
+            transform: translateZ(0) translateX(70px) translateY(70px);
+        }
+        .m-core::before { content:''; position:absolute; width:100%; height:120px; background:#475569; transform:rotateX(-90deg); transform-origin:bottom; }
+        .m-core::after { content:''; position:absolute; width:120px; height:100%; background:#94A3B8; transform:rotateY(90deg); transform-origin:left; }
+        
+        .m-glass {
+            position: absolute; width: 140px; height: 140px; 
+            background: rgba(124, 58, 237, 0.1); 
+            border: 1px solid rgba(124, 58, 237, 0.4);
+            transform: translateZ(60px) translateX(30px) translateY(30px);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
+        }
+        /* Paredes de cristal */
+        .m-glass-f1 { width:140px; height:80px; background:rgba(139, 92, 246, 0.15); transform:rotateX(-90deg) translateY(80px) translateZ(140px); transform-origin:bottom; position:absolute; border:1px solid rgba(139, 92, 246, 0.3);}
+        .m-glass-f2 { width:80px; height:140px; background:rgba(139, 92, 246, 0.1); transform:rotateY(90deg) translateX(0) translateZ(0); transform-origin:left; position:absolute; border:1px solid rgba(139, 92, 246, 0.3);}
+        .m-glass-top { width:140px; height:140px; background:rgba(139, 92, 246, 0.05); transform:translateZ(80px); position:absolute; border:1px solid rgba(139, 92, 246, 0.3);}
+
+
+        /* --- MODELO 2: TEATRO (Escalonado) --- */
+        /* Torre escénica */
+        .t-tower {
+            position: absolute; width: 80px; height: 100px; background: #D97706;
+            transform: translateZ(0) translateX(20px) translateY(20px);
+        }
+        .t-tower::before { content:''; position:absolute; width:100%; height:100px; background:#B45309; transform:rotateX(-90deg); transform-origin:bottom; }
+        .t-tower::after { content:''; position:absolute; width:100px; height:100%; background:#F59E0B; transform:rotateY(90deg); transform-origin:left; }
+        .t-tower-top { position:absolute; width:80px; height:100px; background:#FEF3C7; transform:translateZ(100px); }
+
+        /* Gradas (Volumen bajo) */
+        .t-aud {
+            position: absolute; width: 80px; height: 60px; background: #4B5563;
+            transform: translateZ(0) translateX(20px) translateY(120px);
+        }
+        .t-aud::before { content:''; position:absolute; width:100%; height:40px; background:#374151; transform:rotateX(-90deg); transform-origin:bottom; } 
+        .t-aud::after { content:''; position:absolute; width:40px; height:100%; background:#6B7280; transform:rotateY(90deg); transform-origin:left; }
+        .t-aud-top { position:absolute; width:80px; height:60px; background:#9CA3AF; transform:translateZ(40px); }
+
+
+        /* --- MODELO 3: ÁGORA (Topografía Negativa) --- */
+        /* Capas de tierra */
+        .a-layer1 { width: 180px; height: 180px; background: #10B981; transform: translateZ(0px); position: absolute; top:10px; left:10px;}
+        .a-layer2 { width: 140px; height: 140px; background: #059669; transform: translateZ(-15px) translateX(20px) translateY(20px); position: absolute; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
+        .a-layer3 { width: 100px; height: 100px; background: #047857; transform: translateZ(-30px) translateX(40px) translateY(40px); position: absolute; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
+        .a-tree { width: 10px; height: 10px; background: #064E3B; border-radius: 50%; position: absolute; transform: translateZ(10px); }
+
+
+        /* --- MODELO 4: GALERÍA (Pérgola Modular) --- */
+        .g-frame {
+            position: absolute; width: 10px; height: 160px; background: #2563EB;
+        }
+        /* Múltiples marcos */
+        .g-f1 { transform: translateX(40px) translateY(20px); }
+        .g-f2 { transform: translateX(80px) translateY(20px); }
+        .g-f3 { transform: translateX(120px) translateY(20px); }
+        .g-f4 { transform: translateX(160px) translateY(20px); }
+
+        /* Altura de los marcos */
+        .g-col-v { position:absolute; width:10px; height:160px; background:#1D4ED8; transform: rotateY(90deg) rotateZ(90deg) translateX(-40px); transform-origin: left;} /* Columna visual trick */
+        .g-roof { position:absolute; width:10px; height:160px; background:rgba(255,255,255,0.8); transform: translateZ(40px); border: 1px solid #93C5FD;}
+
+        /* Animaciones UI */
+        .fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-white text-slate-800 font-sans h-screen flex flex-col overflow-hidden">
+
+    <!-- HEADER -->
+    <header class="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-8 z-50 shrink-0">
+        <div class="flex items-center gap-6">
+            <div class="w-12 h-12 bg-arch-dark text-white rounded-full flex items-center justify-center font-serif text-2xl italic">03</div>
+            <div>
+                <h1 class="font-display font-bold text-2xl tracking-tight text-arch-dark uppercase">Equipamiento Cultural</h1>
+                <p class="text-xs text-slate-500 font-medium tracking-widest uppercase">Plaza del Arte | Catálogo Arquitectónico</p>
+            </div>
+        </div>
+        
+        <nav class="hidden md:flex bg-slate-50 p-1.5 rounded-full border border-slate-100">
+            <button onclick="switchView('catalogo')" id="btn-catalogo" class="nav-btn bg-white shadow-sm px-6 py-2 rounded-full text-sm font-bold text-arch-dark transition-all">Explorador 3D</button>
+            <button onclick="switchView('relaciones')" id="btn-relaciones" class="nav-btn px-6 py-2 rounded-full text-sm font-bold text-slate-400 hover:text-arch-dark transition-all">Corte & Relaciones</button>
+            <button onclick="switchView('gestion')" id="btn-gestion" class="nav-btn px-6 py-2 rounded-full text-sm font-bold text-slate-400 hover:text-arch-dark transition-all">Gestión & Agenda</button>
+        </nav>
+    </header>
+
+    <!-- MAIN CANVAS -->
+    <main class="flex-1 relative bg-arch-gray overflow-hidden">
+        
+        <!-- VISTA 1: CATÁLOGO VOLUMÉTRICO -->
+        <div id="catalogo" class="view-panel w-full h-full flex flex-col md:flex-row">
+            
+            <!-- Selector de Edificios (Izquierda) -->
+            <div class="w-full md:w-1/3 bg-white h-full border-r border-slate-200 overflow-y-auto no-scrollbar z-20 shadow-xl">
+                <div class="p-8 space-y-8">
+                    <div class="mb-4">
+                        <h2 class="font-serif text-3xl italic text-slate-900 mb-2">Los 4 Anclas</h2>
+                        <p class="text-sm text-slate-500 leading-relaxed">Cada cuadrante liberado alberga una tipología volumétrica distinta, respondiendo a su función específica.</p>
+                    </div>
+
+                    <!-- Card 1: Museo -->
+                    <div onclick="renderBuilding('museo')" class="building-card cursor-pointer group p-6 rounded-2xl bg-purple-50 hover:bg-purple-100 transition-colors border border-purple-100 ring-2 ring-museum-purple relative overflow-hidden active-card" id="card-museo">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-museum-purple opacity-5 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                        <span class="text-[10px] font-bold tracking-widest text-museum-purple uppercase mb-2 block">Volumen: Cubo Puro</span>
+                        <h3 class="font-display font-bold text-xl text-slate-900 mb-1">Museo MAM</h3>
+                        <p class="text-xs text-slate-600">Transparencia & Doble Altura</p>
+                    </div>
+
+                    <!-- Card 2: Teatro -->
+                    <div onclick="renderBuilding('teatro')" class="building-card cursor-pointer group p-6 rounded-2xl bg-orange-50 hover:bg-orange-100 transition-colors border border-orange-100 ring-2 ring-transparent hover:ring-theater-gold relative overflow-hidden" id="card-teatro">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-theater-gold opacity-5 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                        <span class="text-[10px] font-bold tracking-widest text-theater-gold uppercase mb-2 block">Volumen: Escalonado</span>
+                        <h3 class="font-display font-bold text-xl text-slate-900 mb-1">Teatro Experimental</h3>
+                        <p class="text-xs text-slate-600">Caja Escénica + Graderío</p>
+                    </div>
+
+                    <!-- Card 3: Ágora -->
+                    <div onclick="renderBuilding('agora')" class="building-card cursor-pointer group p-6 rounded-2xl bg-emerald-50 hover:bg-emerald-100 transition-colors border border-emerald-100 ring-2 ring-transparent hover:ring-agora-green relative overflow-hidden" id="card-agora">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-agora-green opacity-5 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                        <span class="text-[10px] font-bold tracking-widest text-agora-green uppercase mb-2 block">Volumen: Sustractivo</span>
+                        <h3 class="font-display font-bold text-xl text-slate-900 mb-1">Ágora Verde</h3>
+                        <p class="text-xs text-slate-600">Topografía & Terrazas</p>
+                    </div>
+
+                    <!-- Card 4: Galería -->
+                    <div onclick="renderBuilding('galeria')" class="building-card cursor-pointer group p-6 rounded-2xl bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-100 ring-2 ring-transparent hover:ring-gallery-blue relative overflow-hidden" id="card-galeria">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-gallery-blue opacity-5 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                        <span class="text-[10px] font-bold tracking-widest text-gallery-blue uppercase mb-2 block">Volumen: Modular</span>
+                        <h3 class="font-display font-bold text-xl text-slate-900 mb-1">Galería Pérgola</h3>
+                        <p class="text-xs text-slate-600">Repetición & Ritmo</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualizador Central 3D (Derecha) -->
+            <div class="flex-1 relative flex items-center justify-center bg-[#F8FAFC] p-8 overflow-hidden">
+                <!-- Fondo Grid -->
+                <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#94A3B8 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+                <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    
+                    <!-- EL VISUALIZADOR 3D -->
+                    <div class="h-[400px] w-full relative">
+                        <div class="scene-3d">
+                            <!-- Contenedor que rotará -->
+                            <div id="model-container" class="iso-container enter">
+                                
+                                <!-- BASE DEL SUELO (Común) -->
+                                <div class="absolute inset-0 bg-slate-200 border border-slate-300 transform translateZ(-1px) shadow-2xl"></div>
+
+                                <!-- MAQUETA: MUSEO -->
+                                <div id="model-museo" class="model-group">
+                                    <div class="m-core"></div>
+                                    <div class="m-glass-f1"></div> <!-- Frontal -->
+                                    <div class="m-glass-f2"></div> <!-- Lateral -->
+                                    <div class="m-glass-top"></div> <!-- Techo -->
+                                </div>
+
+                                <!-- MAQUETA: TEATRO -->
+                                <div id="model-teatro" class="model-group hidden">
+                                    <div class="t-tower">
+                                        <div class="t-tower-top"></div>
+                                    </div>
+                                    <div class="t-aud">
+                                        <div class="t-aud-top"></div>
+                                    </div>
+                                </div>
+
+                                <!-- MAQUETA: ÁGORA -->
+                                <div id="model-agora" class="model-group hidden">
+                                    <div class="a-layer1"></div>
+                                    <div class="a-layer2"></div>
+                                    <div class="a-layer3"></div>
+                                    <!-- Árboles abstractos -->
+                                    <div class="a-tree" style="top:20px; left:20px;"></div>
+                                    <div class="a-tree" style="top:150px; left:150px;"></div>
+                                    <div class="a-tree" style="top:20px; left:150px;"></div>
+                                </div>
+
+                                <!-- MAQUETA: GALERÍA -->
+                                <div id="model-galeria" class="model-group hidden">
+                                    <div class="g-frame g-f1"><div class="g-roof"></div></div>
+                                    <div class="g-frame g-f2"><div class="g-roof"></div></div>
+                                    <div class="g-frame g-f3"><div class="g-roof"></div></div>
+                                    <div class="g-frame g-f4"><div class="g-roof"></div></div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Información Texto -->
+                    <div id="info-panel" class="space-y-6 fade-in-up">
+                        <div id="badge-container" class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-museum-purple"></span> Arquitectura Cultural
+                        </div>
+                        <h2 id="b-title" class="text-4xl font-display font-bold text-slate-900">Museo MAM</h2>
+                        <p id="b-desc" class="text-slate-600 leading-relaxed text-lg">
+                            Un volumen puro de cristal y acero insertado en el vacío histórico. La transparencia de la fachada democratiza el acceso visual al arte.
+                        </p>
+                        
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                            <div>
+                                <span class="block text-xs font-bold text-slate-400 uppercase mb-1">Materialidad</span>
+                                <span id="b-mat" class="block font-serif text-lg italic text-slate-800">Vidrio U-Glass</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-slate-400 uppercase mb-1">Estrategia</span>
+                                <span id="b-strat" class="block font-serif text-lg italic text-slate-800">Adición Volumétrica</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 2: RELACIONES (CORTE PROGRAMÁTICO) -->
+        <div id="relaciones" class="view-panel hidden w-full h-full p-8 md:p-16 overflow-y-auto">
+            <div class="max-w-6xl mx-auto bg-white p-8 md:p-12 rounded-3xl shadow-soft">
+                <div class="text-center mb-12">
+                    <h2 class="font-display font-bold text-3xl mb-4">Simbiosis: Vivienda + Cultura</h2>
+                    <p class="text-slate-500 max-w-2xl mx-auto">
+                        El proyecto no expulsa a los residentes; los integra. El anillo perimetral de vivienda protege el núcleo cultural, creando un ecosistema de actividad 24/7.
+                    </p>
+                </div>
+
+                <!-- DIAGRAMA DE CORTE DE COMPOSICIÓN -->
+                <div class="relative w-full h-[400px] border-b-2 border-slate-800 flex items-end justify-center gap-1">
+                    
+                    <!-- 1. El Marco (Vivienda Existente) - IZQUIERDA -->
+                    <div class="relative w-1/4 h-[300px] bg-slate-100 border border-slate-300 group hover:bg-slate-200 transition-colors flex flex-col justify-end">
+                        <div class="absolute -top-10 left-0 w-full text-center text-xs font-bold text-slate-400 uppercase">Lo Privado</div>
+                        
+                        <!-- Pisos -->
+                        <div class="h-1/4 w-full border-b border-slate-200 flex items-center justify-center text-[10px] text-slate-400">Vivienda</div>
+                        <div class="h-1/4 w-full border-b border-slate-200 flex items-center justify-center text-[10px] text-slate-400">Vivienda</div>
+                        <div class="h-1/4 w-full border-b border-slate-200 flex items-center justify-center text-[10px] text-slate-400">Vivienda</div>
+                        <div class="h-1/4 w-full bg-orange-100 border-t border-orange-200 flex items-center justify-center text-xs font-bold text-orange-800">Comercio Barrial</div>
+                    </div>
+
+                    <!-- 2. El Filtro (Transición) -->
+                    <div class="w-16 h-20 bg-transparent flex items-end justify-center pb-2">
+                        <div class="w-1 h-12 bg-slate-300"></div> <!-- Columna portal -->
+                        <span class="absolute bottom-24 text-[9px] text-slate-400 -rotate-90">Portal</span>
+                    </div>
+
+                    <!-- 3. El Objeto (Cultura Nuevo) - CENTRO -->
+                    <div class="relative w-1/3 h-[250px] bg-purple-50 border-2 border-museum-purple rounded-t-xl shadow-lg flex flex-col items-center justify-center group hover:bg-purple-100 transition-colors z-10">
+                        <div class="absolute -top-10 left-0 w-full text-center text-xs font-bold text-museum-purple uppercase">Lo Público</div>
+                        <span class="text-3xl mb-2">🏛️</span>
+                        <h4 class="font-bold text-museum-purple">EQUIPAMIENTO</h4>
+                        <p class="text-[10px] text-purple-800 mt-2 px-4 text-center">Espacio diáfano, flexible y de acceso libre.</p>
+                        
+                        <!-- Conexión Subterránea -->
+                        <div class="absolute -bottom-16 w-3/4 h-16 border-x-2 border-dashed border-slate-400 flex items-center justify-center bg-slate-50">
+                            <span class="text-[9px] text-slate-500">Auditorio / Depósito (N-1)</span>
+                        </div>
+                    </div>
+
+                    <!-- 4. El Espacio Público (Plaza) -->
+                    <div class="w-1/4 h-12 bg-transparent flex items-end justify-center pb-2 relative">
+                        <div class="absolute bottom-0 w-full h-1 bg-green-500"></div>
+                        <span class="text-2xl absolute bottom-2">🌳 🚶‍♀️</span>
+                    </div>
+
+                </div>
+
+                <!-- Leyenda -->
+                <div class="grid grid-cols-3 gap-8 mt-16 text-center">
+                    <div>
+                        <span class="block text-2xl font-bold text-slate-900 mb-1">65%</span>
+                        <span class="text-xs text-slate-500 uppercase tracking-widest">Residencial (Marco)</span>
+                    </div>
+                    <div>
+                        <span class="block text-2xl font-bold text-museum-purple mb-1">25%</span>
+                        <span class="text-xs text-slate-500 uppercase tracking-widest">Cultural (Núcleo)</span>
+                    </div>
+                    <div>
+                        <span class="block text-2xl font-bold text-agora-green mb-1">10%</span>
+                        <span class="text-xs text-slate-500 uppercase tracking-widest">Verde (Conexión)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 3: GESTIÓN & AGENDA -->
+        <div id="gestion" class="view-panel hidden w-full h-full p-8 overflow-y-auto">
+            <div class="max-w-5xl mx-auto">
+                <div class="mb-8 flex items-end justify-between">
+                    <div>
+                        <h2 class="font-display font-bold text-3xl text-slate-900">Agenda Urbana 24/7</h2>
+                        <p class="text-slate-500 mt-2">Simulación de ocupación y actividades para garantizar seguridad y vitalidad.</p>
+                    </div>
+                    <div class="flex gap-2 text-sm font-bold">
+                        <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full">☀️ Día: Comercial</span>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">🌙 Noche: Cultural</span>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Gráfico de Ocupación -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-4">Ritmo de Actividad (Personas/Hora)</h3>
+                        <div class="h-64 w-full">
+                            <canvas id="activityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Modelo de Gestión -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-4">Sostenibilidad Económica</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded bg-green-100 text-green-600 flex items-center justify-center font-bold">$</div>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-700">Concesiones Comerciales</p>
+                                        <p class="text-xs text-slate-500">Cafeterías y tiendas en planta baja</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-green-600">40% Ingresos</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded bg-purple-100 text-purple-600 flex items-center justify-center font-bold">T</div>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-700">Taquilla Teatro/Museo</p>
+                                        <p class="text-xs text-slate-500">Eventos especiales y exposiciones</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-purple-600">30% Ingresos</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center font-bold">M</div>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-700">Subsidio Municipal</p>
+                                        <p class="text-xs text-slate-500">Mantenimiento de espacio público</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-blue-600">30% Ingresos</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Horarios -->
+                <div class="bg-slate-900 text-slate-300 rounded-2xl p-8 overflow-hidden relative">
+                    <div class="absolute top-0 right-0 p-32 bg-blue-500 rounded-full filter blur-[100px] opacity-20"></div>
+                    <h3 class="font-serif italic text-2xl text-white mb-6 relative z-10">Programación Semanal Tipo</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 text-sm">
+                        <div class="border-l-2 border-blue-500 pl-4">
+                            <strong class="block text-white mb-1">Mañana (08:00 - 12:00)</strong>
+                            <p>Mantenimiento de jardines, apertura de cafeterías, visitas escolares al museo.</p>
+                        </div>
+                        <div class="border-l-2 border-yellow-500 pl-4">
+                            <strong class="block text-white mb-1">Tarde (14:00 - 18:00)</strong>
+                            <p>Talleres en Teatro Experimental, Mercado de artesanos activo, Co-working en terrazas.</p>
+                        </div>
+                        <div class="border-l-2 border-purple-500 pl-4">
+                            <strong class="block text-white mb-1">Noche (19:00 - 23:00)</strong>
+                            <p>Funciones de teatro, Cine al aire libre en Ágora, Cenas en perímetro comercial.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- DATA ---
+        const buildings = {
+            'museo': {
+                title: 'Museo MAM',
+                desc: 'Un volumen puro de cristal y acero insertado en el vacío histórico. La transparencia de la fachada democratiza el acceso visual al arte.',
+                material: 'Vidrio U-Glass',
+                strat: 'Adición Volumétrica',
+                color: 'bg-museum-purple'
+            },
+            'teatro': {
+                title: 'Teatro Experimental',
+                desc: 'Composición de dos volúmenes opacos: la torre escénica alta y la platea baja, diseñados para aislamiento acústico total.',
+                material: 'Hormigón Texturizado',
+                strat: 'Escalonamiento',
+                color: 'bg-theater-gold'
+            },
+            'agora': {
+                title: 'Ágora Verde',
+                desc: 'Una operación de sustracción. El suelo se excava en terrazas para formar un anfiteatro natural que también funciona como cuenca de retención pluvial.',
+                material: 'Tierra & Vegetación',
+                strat: 'Sustracción Topográfica',
+                color: 'bg-agora-green'
+            },
+            'galeria': {
+                title: 'Galería Pérgola',
+                desc: 'Estructura lineal y rítmica. Una serie de pórticos de madera laminada que crean un espacio permeable y flexible para ferias.',
+                material: 'Madera Laminada',
+                strat: 'Repetición Modular',
+                color: 'bg-gallery-blue'
+            }
+        };
+
+        // --- RENDER LOGIC ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+            
+            // Botones
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'shadow-sm', 'text-arch-dark');
+                btn.classList.add('text-slate-400');
+            });
+            document.getElementById('btn-' + viewId).classList.add('bg-white', 'shadow-sm', 'text-arch-dark');
+            document.getElementById('btn-' + viewId).classList.remove('text-slate-400');
+        }
+
+        function renderBuilding(id) {
+            const data = buildings[id];
+
+            // 1. Gestionar Cards Activas
+            document.querySelectorAll('.building-card').forEach(el => el.classList.remove('ring-2'));
+            document.getElementById('card-' + id).classList.add('ring-2');
+
+            // 2. Gestionar Modelos 3D (CSS)
+            document.querySelectorAll('.model-group').forEach(el => el.classList.add('hidden'));
+            const model = document.getElementById('model-' + id);
+            model.classList.remove('hidden');
+
+            // Reiniciar animación del contenedor
+            const container = document.getElementById('model-container');
+            container.classList.remove('enter');
+            void container.offsetWidth; // Reflow
+            container.classList.add('enter');
+
+            // 3. Actualizar Textos con animación
+            const panel = document.getElementById('info-panel');
+            panel.classList.remove('fade-in-up');
+            void panel.offsetWidth; 
+            panel.classList.add('fade-in-up');
+
+            document.getElementById('b-title').textContent = data.title;
+            document.getElementById('b-desc').textContent = data.desc;
+            document.getElementById('b-mat').textContent = data.material;
+            document.getElementById('b-strat').textContent = data.strat;
+            
+            // Badge color
+            const badgeDot = document.querySelector('#badge-container span');
+            badgeDot.className = `w-2 h-2 rounded-full ${data.color}`;
+        }
+
+        // --- CHARTS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00', '00:00'],
+                    datasets: [{
+                        label: 'Afluencia Estimada',
+                        data: [50, 400, 850, 600, 950, 800, 200],
+                        borderColor: '#18181B',
+                        backgroundColor: 'rgba(24, 24, 27, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+            });
+        });
+    </script>
+</body>
+</html>
